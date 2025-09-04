@@ -1,12 +1,76 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useState } from "react";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { ServiceCard } from "@/components/dashboard/ServiceCard";
+import { StatusLegend } from "@/components/dashboard/StatusLegend";
+import { INITIAL_SERVICES, Service } from "@/types/service";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+
+  const filteredServices = services.filter(service =>
+    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    service.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleRefresh = () => {
+    toast({
+      title: "Refreshing services...",
+      description: "Service status is being updated.",
+    });
+    // In a real app, this would fetch fresh service data
+  };
+
+  const handleViewLogs = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    toast({
+      title: `Viewing logs for ${service?.name}`,
+      description: "Opening service logs...",
+    });
+  };
+
+  const handleRestart = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    toast({
+      title: `Restarting ${service?.name}`,
+      description: "Service restart initiated...",
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onRefresh={handleRefresh}
+      />
+      
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredServices.map((service) => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              onViewLogs={handleViewLogs}
+              onRestart={handleRestart}
+            />
+          ))}
+        </div>
+        
+        {filteredServices.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No services match your search criteria.</p>
+          </div>
+        )}
+      </main>
+      
+      <StatusLegend />
+      
+      <footer className="text-center py-4 text-sm text-muted-foreground border-t border-border">
+        This is running with mock data. Hook real endpoints later to execute actual restarts and stream real logs.
+      </footer>
     </div>
   );
 };

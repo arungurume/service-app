@@ -61,6 +61,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				status: {
+					up: 'hsl(var(--status-up))',
+					degraded: 'hsl(var(--status-degraded))',
+					down: 'hsl(var(--status-down))'
+				},
+				dashboard: {
+					header: 'hsl(var(--dashboard-header))',
+					subtitle: 'hsl(var(--dashboard-subtitle))'
 				}
 			},
 			borderRadius: {
