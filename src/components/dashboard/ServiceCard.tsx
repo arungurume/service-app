@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, AlertTriangle, FileText, RotateCcw } from "lucide-react";
+import { XCircle, CheckCircle, AlertTriangle, FileText, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,9 @@ const getStatusIcon = (status: ServiceStatus) => {
     case "DEGRADED":
       return <AlertTriangle className="w-5 h-5 text-status-degraded" />;
     case "DOWN":
-      return <AlertCircle className="w-5 h-5 text-status-down" />;
+      return <XCircle className="w-5 h-5 text-status-down" />;
     default:
-      return <AlertCircle className="w-5 h-5 text-status-down" />;
+      return <XCircle className="w-5 h-5 text-status-down" />;
   }
 };
 
