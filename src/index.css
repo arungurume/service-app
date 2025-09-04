@@ -8,42 +8,42 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 249 250 251;
-    --foreground: 31 41 55;
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 31 41 55;
+    --card-foreground: 224 71% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 31 41 55;
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 59 130 246;
-    --primary-foreground: 248 250 252;
+    --primary: 220 14% 96%;
+    --primary-foreground: 224 71% 4%;
 
-    --secondary: 241 245 249;
-    --secondary-foreground: 51 65 85;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 46%;
 
-    --muted: 248 250 252;
-    --muted-foreground: 100 116 139;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 241 245 249;
-    --accent-foreground: 51 65 85;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 46%;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 59 130 246;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71% 4%;
 
     /* Status colors */
-    --status-up: 34 197 94;
-    --status-degraded: 245 158 11;
-    --status-down: 239 68 68;
+    --status-up: 142 76% 36%;
+    --status-degraded: 38 92% 50%;
+    --status-down: 0 84% 60%;
     
     /* Dashboard specific */
     --dashboard-header: 0 0% 100%;
-    --dashboard-subtitle: 107 114 128;
+    --dashboard-subtitle: 220 9% 46%;
 
     --radius: 0.5rem;
 
