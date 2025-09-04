@@ -4,11 +4,12 @@ import { ServiceCard } from "@/components/dashboard/ServiceCard";
 import { StatusLegend } from "@/components/dashboard/StatusLegend";
 import { INITIAL_SERVICES, Service } from "@/types/service";
 import { useToast } from "@/hooks/use-toast";
+import { useServiceHealth } from "@/hooks/useServiceHealth";
 
 const Index = () => {
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const { data: services, refetch, isLoading } = useServiceHealth(INITIAL_SERVICES);
 
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -20,7 +21,7 @@ const Index = () => {
       title: "Refreshing services...",
       description: "Service status is being updated.",
     });
-    // In a real app, this would fetch fresh service data
+    refetch();
   };
 
   const handleViewLogs = (serviceId: string) => {
@@ -69,7 +70,7 @@ const Index = () => {
       <StatusLegend />
       
       <footer className="text-center py-4 text-sm text-muted-foreground border-t border-border">
-        This is running with mock data. Hook real endpoints later to execute actual restarts and stream real logs.
+        Services are monitored every 30 seconds. Connect restart and logs functionality as needed.
       </footer>
     </div>
   );
