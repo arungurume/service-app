@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ServiceCard } from "@/components/dashboard/ServiceCard";
 import { StatusLegend } from "@/components/dashboard/StatusLegend";
-import { INITIAL_SERVICES, Service } from "@/types/service";
 import { useToast } from "@/hooks/use-toast";
 import { useServiceHealth } from "@/hooks/useServiceHealth";
+import { INITIAL_SERVICES } from "@/config/serviceConfig";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
