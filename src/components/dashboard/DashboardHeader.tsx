@@ -1,6 +1,8 @@
-import { Search, RefreshCw, Database } from "lucide-react";
+import { Search, RefreshCw, Database, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardHeaderProps {
   searchQuery: string;
@@ -9,6 +11,16 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: DashboardHeaderProps) => {
+  const { logout } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+  };
   return (
     <header className="bg-dashboard-header border-b border-border px-6 py-4">
       <div className="max-w-7xl mx-auto">
@@ -42,6 +54,15 @@ export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: Dash
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
             </Button>
           </div>
         </div>
