@@ -1,4 +1,4 @@
-import { XCircle, CheckCircle, AlertTriangle, FileText, RotateCcw } from "lucide-react";
+import { XCircle, CheckCircle, AlertTriangle, FileText, RotateCcw, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +50,19 @@ export const ServiceCard = ({ service, onViewLogs, onRestart }: ServiceCardProps
           <Badge variant={getStatusBadgeVariant(service.status)}>
             {service.status}
           </Badge>
+        </div>
+        {/* Base URL field with open link icon */}
+        <div className="flex items-center mb-4">
+          <span className="text-xs text-muted-foreground break-all">{service.baseUrl}</span>
+          <a
+            href={service.baseUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 text-primary hover:text-primary/80"
+            title="Open service URL"
+          >
+            <ExternalLink className="w-4 h-4 inline text-muted-foreground" />
+          </a>
         </div>
         
         <div className="flex space-x-2">
