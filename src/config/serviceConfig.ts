@@ -3,16 +3,16 @@ import { Service } from "@/types/service";
 // Use import.meta.env for Vite, process.env for CRA
 export const INITIAL_SERVICES: Service[] = [
   {
-    id: "ums",
-    name: "User Management (UMS)",
-    baseUrl: import.meta.env.VITE_UMS_BASE_URL || "http://localhost:9001/ums",
+    id: "eureka",
+    name: "Eureka Server",
+    baseUrl: import.meta.env.VITE_EUREKA_BASE_URL || "http://localhost:8761",
     status: "DOWN",
     info: {}
   },
   {
-    id: "cms",
-    name: "Content Management (CMS)",
-    baseUrl: import.meta.env.VITE_CMS_BASE_URL || "http://localhost:9002/cms",
+    id: "ums",
+    name: "User Management (UMS)",
+    baseUrl: import.meta.env.VITE_UMS_BASE_URL || "http://localhost:9001/ums",
     status: "DOWN",
     info: {}
   },
@@ -24,9 +24,9 @@ export const INITIAL_SERVICES: Service[] = [
     info: {}
   },
   {
-    id: "ssms",
-    name: "Socket.IO Server (SSMS)",
-    baseUrl: import.meta.env.VITE_SSMS_BASE_URL || "http://localhost:9006",
+    id: "cms",
+    name: "Content Management (CMS)",
+    baseUrl: import.meta.env.VITE_CMS_BASE_URL || "http://localhost:9002/cms",
     status: "DOWN",
     info: {}
   },
@@ -38,10 +38,12 @@ export const INITIAL_SERVICES: Service[] = [
     info: {}
   },
   {
-    id: "eureka",
-    name: "Eureka Server",
-    baseUrl: import.meta.env.VITE_EUREKA_BASE_URL || "http://localhost:8761",
+    id: "sms",
+    name: "Web-Socket/Socket.IO Server (SMS)",
+    baseUrl: import.meta.env.VITE_SMS_BASE_URL || "http://localhost:9006",
     status: "DOWN",
     info: {}
   },
+  
+  
 ];
