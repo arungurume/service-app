@@ -10,8 +10,12 @@ export const fetchServiceHealth = async (
   baseUrl: string
 ): Promise<ServiceStatus> => {
   console.log(`Fetching health for service: ${serviceId}`);
+  let apiUrl = `${baseUrl}/actuator/health`;
   try {
-    const response = await fetch(`${baseUrl}/actuator/health`, {
+    if(serviceId == 'nas'){
+      apiUrl = `${baseUrl}/api/health`;
+    }
+    const response = await fetch(apiUrl, {
       method: "GET",
       credentials: "include", // important if backend sets cookies
     });
