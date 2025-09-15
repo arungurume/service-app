@@ -26,9 +26,11 @@ const Index = () => {
 
   const handleViewLogs = (serviceId: string) => {
     const service = services.find(s => s.id === serviceId);
+    const logsUrl = `/logs/${serviceId}`;
+    window.open(logsUrl, '_blank');
     toast({
-      title: `Viewing logs for ${service?.name}`,
-      description: "Opening service logs...",
+      title: `Opening logs for ${service?.name}`,
+      description: "Logs opened in new tab",
     });
   };
 
