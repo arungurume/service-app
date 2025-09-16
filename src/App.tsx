@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LogsPage from "./pages/LogsPage";
+import UsersPage from "./pages/UsersPage";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -43,6 +44,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/logs/:serviceId" element={<LogsPage />} />
+            <Route path="/dshub/users" element={<UsersPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

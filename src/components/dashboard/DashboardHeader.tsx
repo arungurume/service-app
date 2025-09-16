@@ -1,8 +1,9 @@
-import { Search, RefreshCw, Database, LogOut } from "lucide-react";
+import { Search, RefreshCw, Database, LogOut, Grid3X3, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardHeaderProps {
   searchQuery: string;
@@ -13,6 +14,8 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: DashboardHeaderProps) => {
   const { logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -36,25 +39,52 @@ export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: Dash
           </div>
           
           <div className="flex items-center space-x-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Search services..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 w-64"
-              />
+            {location.pathname !== '/dshub/users' && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search services..."
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+            )}
+            {location.pathname !== '/dshub/users' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefresh}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+            )}
+            
+            {/* Navigation Tabs */}
+            <div className="flex items-center bg-muted rounded-lg p-1">
+              <Button
+                variant={location.pathname === '/' ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2"
+              >
+                <Grid3X3 className="w-4 h-4" />
+                Services
+              </Button>
+              <Button
+                variant={location.pathname === '/dshub/users' ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate('/dshub/users')}
+                className="flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                Users
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefresh}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
+
             <Button
               variant="outline"
               size="sm"
