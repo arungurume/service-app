@@ -121,7 +121,7 @@ const LogsPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-black text-green-400 p-4 rounded-md font-mono text-sm h-96 overflow-y-auto">
+            <div className="bg-black text-green-400 p-4 rounded-md font-mono text-sm h-[34em] overflow-y-auto">
               {filteredLogs.length === 0 ? (
                 <div className="text-muted-foreground">No logs available or no matches found.</div>
               ) : (
@@ -134,10 +134,10 @@ const LogsPage = () => {
             </div>
           </CardContent>
         </Card>
-
+           {/* Placeholder for future content   
         <div className="text-center text-sm text-muted-foreground">
           <p>Real-time log streaming.</p>
-        </div>
+        </div>*/} 
       </div>
     </div>
   );
