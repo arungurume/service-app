@@ -1,5 +1,5 @@
 import express from "express";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const SCRIPT_ROOT = "/projects";
+const PROJECT_ROOT_DIR = "/projects";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,7 +57,7 @@ app.post("/api/service/:serviceId/restart", (req, res) => {
 // Helper to run script
 function runScript(action, serviceId, res) {
   // Base folder
-  const scriptDir = path.join(SCRIPT_ROOT, "backend", "_bin");
+  const scriptDir = path.join(PROJECT_ROOT_DIR, "backend", "_bin");
   const scriptFile = `${action}_${serviceId}.sh`;
 
   // First cd into dir, then run script
@@ -83,6 +83,41 @@ function runScript(action, serviceId, res) {
   });
 }
 
+// Stream logs
+app.get("/api/service/:serviceId/logs", (req, res) => {
+  const { serviceId } = req.params;
+  const logDir = path.join(PROJECT_ROOT_DIR, "backend", "logs");
+  const logFile = path.join(logDir, `${serviceId}.log`);
+
+  // Set headers for SSE
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+
+  // Send initial connection
+  res.write(`event: message\n`);
+  res.write(`data: Connected to log stream for ${serviceId}\n\n`);
+
+  // Spawn tail -f
+  const tail = spawn("tail", ["-f", logFile]);
+
+  tail.stdout.on("data", (data) => {
+    res.write(`event: message\n`);
+    res.write(`data: ${data.toString()}\n\n`);
+  });
+
+  tail.stderr.on("data", (data) => {
+    res.write(`event: error\n`);
+    res.write(`data: ${data.toString()}\n\n`);
+  });
+
+  req.on("close", () => {
+    console.log(`Client disconnected from ${serviceId} logs`);
+    tail.kill();
+  });
+});
 
 // --- Serve React build ---
 /*const buildPath = path.join(__dirname, "build");

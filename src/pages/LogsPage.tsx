@@ -19,28 +19,23 @@ const LogsPage = () => {
   useEffect(() => {
     if (!service) return;
 
-    // TODO: Implement actual log fetching from backend
-    // For now, simulate some log entries
-    const simulatedLogs = [
-      `[${new Date().toISOString()}] INFO - ${service.name} started successfully`,
-      `[${new Date().toISOString()}] DEBUG - Initializing ${service.name} components`,
-      `[${new Date().toISOString()}] INFO - ${service.name} listening on ${service.baseUrl}`,
-    ];
-    setLogs(simulatedLogs);
-
-    // Auto-refresh logs every 5 seconds if enabled
-    let interval: NodeJS.Timeout;
-    if (autoRefresh) {
-      interval = setInterval(() => {
-        const newLog = `[${new Date().toISOString()}] INFO - Health check passed for ${service.name}`;
-        setLogs(prev => [...prev, newLog].slice(-100)); // Keep last 100 logs
-      }, 5000);
-    }
+    let eventSource;
+    setLogs([]); // Clear logs on new connection
+    eventSource = new EventSource(
+      `${import.meta.env.VITE_NODE_SERVER_BASE_URL || 'http://localhost:5000'}/api/service/${serviceId}/logs`
+    );
+    eventSource.addEventListener("message", (event) => {
+      setLogs((prev) => [...prev, event.data].slice(-100)); // Keep last 100 logs
+    });
+    eventSource.addEventListener("error", (event) => {
+      console.error("Log stream error:", event);
+      eventSource.close();
+    });
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (eventSource) eventSource.close();
     };
-  }, [service, autoRefresh]);
+  }, [service, serviceId]);
 
   if (!service) {
     return <Navigate to="/404" replace />;
@@ -66,7 +61,7 @@ const LogsPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const filteredLogs = logs.filter(log => 
+  const filteredLogs = logs.filter(log =>
     searchQuery === '' || log.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -141,8 +136,7 @@ const LogsPage = () => {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground">
-          <p>Real-time log streaming will be implemented with backend integration.</p>
-          <p>Currently showing simulated logs for demonstration.</p>
+          <p>Real-time log streaming.</p>
         </div>
       </div>
     </div>

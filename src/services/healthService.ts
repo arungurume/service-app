@@ -12,7 +12,7 @@ export const fetchServiceHealth = async (
   console.log(`Fetching health for service: ${serviceId}`);
   let apiUrl = `${baseUrl}/actuator/health`;
   try {
-    if(serviceId == 'nas'){
+    if(serviceId == 'ans'){
       apiUrl = `${baseUrl}/api/health`;
     }
     const response = await fetch(apiUrl, {
