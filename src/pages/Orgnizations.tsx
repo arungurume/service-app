@@ -51,7 +51,7 @@ const Orgnizations = () => {
   }), [currentPage, pageSize, sortBy, sortOrder, searchQuery]);
 
   // New: extracted fetch function (call from useEffect or other handlers)
-  const fetchOrgsPage = async (paginationParams: { page: number; size: number; sortBy?: string; sortOrder?: string; q?: string }) => {
+  const fetchOrgsPage = async (paginationParams: { page: number; size: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string }) => {
     let mounted = true; // local mounted flag for this call
     try {
       setIsLoading(true);
@@ -82,7 +82,7 @@ const Orgnizations = () => {
     const paginationForTarget = {
       ...pagination,
       page: Math.max(0, clamped - 1),
-      size: parseInt(pageSize, 10),
+      size: pageSize,
     };
 
     try {
@@ -199,7 +199,11 @@ const Orgnizations = () => {
                 {paginatedOrgs.map((org) => {
                   const defaultLoc = (org.locations || []).find(l => l.default) || (org.locations && org.locations[0]);
                   return (
-                    <TableRow key={String(org.id)} className="cursor-pointer hover:bg-muted/50">
+                    <TableRow 
+                      key={String(org.id)} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => window.location.href = `/dshub/organizations/${org.id}`}
+                    >
                       <TableCell className="font-medium">{org.id}</TableCell>
                       <TableCell>{org.name || "—"}</TableCell>
                       <TableCell>{org.contactEmailId || "—"}</TableCell>
