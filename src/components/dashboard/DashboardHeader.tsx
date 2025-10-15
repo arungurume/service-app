@@ -39,7 +39,7 @@ export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: Dash
           </div>
           
           <div className="flex items-center space-x-3">
-            {location.pathname !== '/dshub/users' && (
+            {location.pathname !== '/dshub/organizations' && (
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -51,7 +51,7 @@ export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: Dash
                 />
               </div>
             )}
-            {location.pathname !== '/dshub/users' && (
+            {location.pathname !== '/dshub/organizations' && (
               <Button
                 variant="outline"
                 size="sm"
@@ -75,13 +75,13 @@ export const DashboardHeader = ({ searchQuery, onSearchChange, onRefresh }: Dash
                 Services
               </Button>
               <Button
-                variant={location.pathname === '/dshub/users' ? "default" : "ghost"}
+                variant={location.pathname === '/dshub/organizations' ? "default" : "ghost"}
                 size="sm"
-                onClick={() => navigate('/dshub/users')}
+                onClick={() => navigate('/dshub/organizations')}
                 className="flex items-center gap-2"
               >
                 <Users className="w-4 h-4" />
-                Users
+                Organizations
               </Button>
             </div>
 

@@ -1,0 +1,141 @@
+// Lightweight DS Hub service client — configure baseUrl/token and use exported functions.
+
+// Replace concrete domain types with generic, re-usable types
+export type ApiObject = Record<string, any>;
+export type Id = number | string;
+
+export interface PageableResponse<T = ApiObject> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  // ...other pageable meta
+}
+
+type RequestOptions = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  body?: any;
+  token?: string;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+};
+
+const defaultHeaders = {
+  "Content-Type": "application/json",
+};
+
+/**
+ * Simple request helper using fetch. Pass baseUrl when creating client.
+ */
+const request = async <T>(
+  baseUrl: string,
+  path: string,
+  opts: RequestOptions = {}
+): Promise<T> => {
+  const url = `${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+  const headers: Record<string, string> = {
+    ...defaultHeaders,
+    ...(opts.headers || {}),
+  };
+  if (opts.token) headers["Authorization"] = `Bearer ${opts.token}`;
+
+  const res = await fetch(url, {
+    method: opts.method || "GET",
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    //credentials: "include",
+    signal: opts.signal,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const err = new Error(`Request failed: ${res.status} ${res.statusText} ${text}`);
+    // attach status for callers
+    (err as any).status = res.status;
+    throw err;
+  }
+
+  // attempt JSON parse, otherwise return empty
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return (await res.json()) as T;
+  }
+  // @ts-ignore
+  return (await res.text()) as T;
+};
+
+// Make the client generic so callers can provide concrete types if desired.
+// Defaults use ApiObject for flexibility.
+export type DSHubClient<TOrg = ApiObject, TLoc = ApiObject> = {
+  listOrganizations: (params?: { page?: number; size?: number; q?: string }) => Promise<PageableResponse<TOrg>>;
+  getOrganization: (orgId: Id) => Promise<TOrg>;
+  updateOrganization: (orgId: Id, payload: Partial<TOrg>) => Promise<TOrg>;
+  listLocations: (orgId: Id) => Promise<TLoc[]>;
+};
+
+// Changed code: derive baseUrl from env inside the factory and accept only token
+export const createDSHubClient = (token?: string): DSHubClient => {
+  const baseUrl = (process.env.NEXT_PUBLIC_API_BASE && String(process.env.NEXT_PUBLIC_API_BASE)) || "https://api.example.com";
+
+  // Adjust endpoints below to match your real API routes
+  return {
+    listOrganizations: async (params = {}) => {
+      const q = params.q ? `&q=${encodeURIComponent(params.q)}` : "";
+      const page = params.page ?? 0;
+      const size = params.size ?? 10;
+      const path = `/api/organizations?page=${page}&size=${size}${q}`;
+      return request<PageableResponse<any>>(baseUrl, path, { token });
+    },
+
+    getOrganization: async (orgId) => {
+      const path = `/api/organizations/${orgId}`;
+      return request<any>(baseUrl, path, { token });
+    },
+
+    updateOrganization: async (orgId, payload) => {
+      const path = `/api/organizations/${orgId}`;
+      return request<any>(baseUrl, path, { method: "PUT", body: payload, token });
+    },
+
+    listLocations: async (orgId) => {
+      const path = `/api/organizations/${orgId}/locations`;
+      return request<any[]>(baseUrl, path, { token });
+    },
+  };
+};
+
+// New: fetch organizations directly from OMS endpoint with optional query params
+export const fetchOrganizationsFromOms = async (
+  params?: { page?: number; size?: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string },
+  token?: string
+): Promise<any> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_OMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_OMS_BASE_URL)
+    : undefined;
+  const baseOms = envBase || "http://localhost:9003";
+
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.size !== undefined) qs.set("size", String(params.size));
+  if (params?.sortBy) qs.set("sortBy", params.sortBy);
+  if (params?.sortOrder) qs.set("sortOrder", params.sortOrder);
+  if (params?.q) qs.set("q", params.q);
+
+  const path = `/dsadmin/dac/organizations${qs.toString() ? `?${qs.toString()}` : ""}`;
+  return request<any>(baseOms, path, { token });
+};
+
+/*
+Usage:
+
+- Prefer creating the DSHub client from the page (or a React provider) and pass it into components.
+  createDSHubClient now reads the baseUrl from process.env.NEXT_PUBLIC_API_BASE (or falls back to "https://api.example.com").
+
+Example in a page/component:
+
+const client = createDSHubClient(authToken);
+// pass `client` as a prop to the page component or a provider.
+
+This avoids creating a global client inside the service module and enables dependency injection.
+*/
