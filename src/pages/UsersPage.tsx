@@ -129,14 +129,14 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <DashboardHeader
         searchQuery={searchQuery}
         onSearchChange={(val: string) => { setSearchQuery(val); setCurrentPage(1); }}
         onRefresh={() => { /* no-op for mock */ }}
       />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-2">Users</h1>
           <p className="text-muted-foreground">
@@ -247,7 +247,7 @@ const UsersPage: React.FC = () => {
           <p>This page uses mock users. Connect to real user APIs when ready.</p>
         </div>
       </main>
-    </div>
+    </>
   );
 };
 

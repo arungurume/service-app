@@ -203,31 +203,31 @@ const OrganizationDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <>
         <DashboardHeader searchQuery="" onSearchChange={() => {}} onRefresh={() => {}} />
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="px-6 py-8">
           <div className="text-center text-muted-foreground">Loading...</div>
         </main>
-      </div>
+      </>
     );
   }
 
   if (!org) {
     return (
-      <div className="min-h-screen bg-background">
+      <>
         <DashboardHeader searchQuery="" onSearchChange={() => {}} onRefresh={() => {}} />
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="px-6 py-8">
           <div className="text-center text-muted-foreground">Organization not found</div>
         </main>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <DashboardHeader searchQuery="" onSearchChange={() => {}} onRefresh={() => {}} />
       
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="px-6 py-8">
         <div className="mb-6">
           <Button variant="ghost" onClick={() => navigate("/dshub/organizations")} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -477,7 +477,7 @@ const OrganizationDetails = () => {
           </Card>
         </div>
       </main>
-    </div>
+    </>
   );
 };
 

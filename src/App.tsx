@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Organizations from "./pages/Orgnizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
 import UsersPage from "./pages/UsersPage";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const queryClient = new QueryClient();
 
@@ -43,15 +45,22 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/logs/:serviceId" element={<LogsPage />} />
-            <Route path="/dshub/users" element={<UsersPage />} />
-            <Route path="/dshub/organizations" element={<Organizations />} />
-            <Route path="/dshub/organizations/:id" element={<OrganizationDetails />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+              <AppSidebar />
+              <main className="flex-1 overflow-auto">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/logs/:serviceId" element={<LogsPage />} />
+                  <Route path="/dshub/users" element={<UsersPage />} />
+                  <Route path="/dshub/organizations" element={<Organizations />} />
+                  <Route path="/dshub/organizations/:id" element={<OrganizationDetails />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </div>
+          </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -43,14 +43,14 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <DashboardHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onRefresh={handleRefresh}
       />
       
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredServices.map((service) => (
             <ServiceCard
@@ -67,14 +67,14 @@ const Index = () => {
             <p className="text-muted-foreground">No services match your search criteria.</p>
           </div>
         )}
+        
+        <StatusLegend />
+        
+        <footer className="text-center py-4 text-sm text-muted-foreground border-t border-border">
+          Services are monitored every 30 seconds. Connect restart and logs functionality as needed.
+        </footer>
       </main>
-      
-      <StatusLegend />
-      
-      <footer className="text-center py-4 text-sm text-muted-foreground border-t border-border">
-        Services are monitored every 30 seconds. Connect restart and logs functionality as needed.
-      </footer>
-    </div>
+    </>
   );
 };
 

@@ -137,14 +137,14 @@ const Orgnizations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <DashboardHeader
         searchQuery={searchQuery}
         onSearchChange={(val: string) => { setSearchQuery(val); setCurrentPage(1); }}
         onRefresh={() => { /* add refresh logic when wired to API */ }}
       />
       
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-2">Organizations</h1>
           <p className="text-muted-foreground">
@@ -250,7 +250,7 @@ const Orgnizations = () => {
           <p>This dashboard uses mock data. Wire it to real APIs later (e.g., '/api/organizations', '/api/organizations/:id/locations').</p>
         </div>
       </main>
-    </div>
+    </>
   );
 };
 
