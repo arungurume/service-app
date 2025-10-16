@@ -200,16 +200,27 @@ export const fetchUsersForOrg = async (orgId: Id, token?: string): Promise<any[]
   return [];
 };
 
-/*
-Usage:
+// New: fetch signed-up users (global) from UMS/DS admin
+export const fetchSignedUpUsers = async (
+  params?: { page?: number; size?: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string },
+  token?: string
+): Promise<any[]> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_UMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_UMS_BASE_URL)
+    : undefined;
+  const baseUms = envBase || "http://localhost:9001/ums";
 
-- Prefer creating the DSHub client from the page (or a React provider) and pass it into components.
-  createDSHubClient now reads the baseUrl from process.env.NEXT_PUBLIC_API_BASE (or falls back to "https://api.example.com").
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.size !== undefined) qs.set("size", String(params.size));
+  if (params?.sortBy) qs.set("sortBy", params.sortBy);
+  if (params?.sortOrder) qs.set("sortOrder", params.sortOrder);
+  if (params?.q) qs.set("q", params.q);
+  // Always filter for signed up users
+  qs.set("status", "SIGNED_UP");
 
-Example in a page/component:
+  const path = `/dsadmin/dac/users${qs.toString() ? `?${qs.toString()}` : ""}`;
 
-const client = createDSHubClient(authToken);
-// pass `client` as a prop to the page component or a provider.
-
-This avoids creating a global client inside the service module and enables dependency injection.
-*/
+  const res = await request<any>(baseUms, path, { token });
+  return res;
+};

@@ -10,6 +10,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
 import Organizations from "./pages/Orgnizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
+import UsersPage from "./pages/UsersPage";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/logs/:serviceId" element={<LogsPage />} />
+            <Route path="/dshub/users" element={<UsersPage />} />
             <Route path="/dshub/organizations" element={<Organizations />} />
             <Route path="/dshub/organizations/:id" element={<OrganizationDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
