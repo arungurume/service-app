@@ -126,6 +126,80 @@ export const fetchOrganizationsFromOms = async (
   return request<any>(baseOms, path, { token });
 };
 
+// New: fetch single organization details from CMS/DS admin by orgId
+export const getOrgByOrgId = async (orgId: Id, token?: string): Promise<any | null> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_OMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_OMS_BASE_URL)
+    : undefined;
+  const baseOms = envBase || "http://localhost:9003";
+  const path = `/dsadmin/dac/organizations/${orgId}`;
+
+  const res = await request<any>(baseOms, path, { token });
+  if (res == null) return null;
+
+  // normalize: some APIs return { content: [...] } while others return an object
+  if (res && Array.isArray((res as any).content)) {
+    return (res as any).content[0] ?? null;
+  }
+  return res;
+};
+
+// New: fetch screens for a specific organization from CMS (normalizes array or { content: [...] })
+export const fetchScreensForOrg = async (orgId: Id, token?: string): Promise<any[]> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : undefined;
+  const baseCms = envBase || "http://localhost:9002/cms";
+  const path = `/dsadmin/dac/organizations/${orgId}/screens`;
+
+  const res = await request<any>(baseCms, path, { token });
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray((res as any).content)) return (res as any).content;
+  return [];
+};
+
+// New: fetch playlists for a specific organization from CMS (normalizes array or { content: [...] })
+export const fetchPlaylistsForOrg = async (orgId: Id, token?: string): Promise<any[]> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : undefined;
+  const baseCms = envBase || "http://localhost:9002/cms";
+  const path = `/dsadmin/dac/organizations/${orgId}/playlists`;
+
+  const res = await request<any>(baseCms, path, { token });
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray((res as any).content)) return (res as any).content;
+  return [];
+};
+
+// New: fetch schedules for a specific organization from CMS (normalizes array or { content: [...] })
+export const fetchSchedulesForOrg = async (orgId: Id, token?: string): Promise<any[]> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : undefined;
+  const baseCms = envBase || "http://localhost:9002/cms";
+  const path = `/dsadmin/dac/organizations/${orgId}/schedules`;
+
+  const res = await request<any>(baseCms, path, { token });
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray((res as any).content)) return (res as any).content;
+  return [];
+};
+
+// New: fetch users for a specific organization from CMS (normalizes array or { content: [...] })
+export const fetchUsersForOrg = async (orgId: Id, token?: string): Promise<any[]> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_UMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_UMS_BASE_URL)
+    : undefined;
+  const baseUms = envBase || "http://localhost:9001/ums";
+  const path = `/dsadmin/dac/organizations/${orgId}/users`;
+
+  const res = await request<any>(baseUms, path, { token });
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray((res as any).content)) return (res as any).content;
+  return [];
+};
+
 /*
 Usage:
 
