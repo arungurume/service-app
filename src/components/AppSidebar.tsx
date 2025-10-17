@@ -1,5 +1,6 @@
 import { LayoutDashboard, Building2, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sidebar,
   SidebarContent,
@@ -19,8 +20,15 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const isMobile = useIsMobile();
+
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -35,6 +43,7 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
+                      onClick={handleMenuClick}
                       className={({ isActive }) =>
                         isActive
                           ? "bg-accent text-accent-foreground font-medium"
