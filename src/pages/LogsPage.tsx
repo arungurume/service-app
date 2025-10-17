@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,16 @@ const LogsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const logsEndRef = useRef<HTMLDivElement>(null);
 
   const service = INITIAL_SERVICES.find(s => s.id === serviceId);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
 
   useEffect(() => {
     if (!service) return;
@@ -125,11 +133,14 @@ const LogsPage = () => {
               {filteredLogs.length === 0 ? (
                 <div className="text-muted-foreground">No logs available or no matches found.</div>
               ) : (
-                filteredLogs.map((log, index) => (
-                  <div key={index} className="mb-1 whitespace-pre-wrap">
-                    {log}
-                  </div>
-                ))
+                <>
+                  {filteredLogs.map((log, index) => (
+                    <div key={index} className="mb-1 whitespace-pre-wrap">
+                      {log}
+                    </div>
+                  ))}
+                  <div ref={logsEndRef} />
+                </>
               )}
             </div>
           </CardContent>
