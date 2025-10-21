@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Organizations from "./pages/Orgnizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
 import UsersPage from "./pages/UsersPage";
+import TemplatesPage from "./pages/TemplatesPage";
+import TemplateFormPage from "./pages/TemplateFormPage";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -55,6 +57,8 @@ const App = () => {
                   <Route path="/dshub/users" element={<UsersPage />} />
                   <Route path="/dshub/organizations" element={<Organizations />} />
                   <Route path="/dshub/organizations/:id" element={<OrganizationDetails />} />
+                  <Route path="/templates" element={<TemplatesPage />} />
+                  <Route path="/templates/:id" element={<TemplateFormPage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
