@@ -227,7 +227,7 @@ export const fetchSignedUpUsers = async (
 
 // New: fetch all screens from CMS with pagination
 export const fetchAllScreens = async (
-  params?: { page?: number; size?: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string },
+  params?: { page?: number; size?: number; sortBy?: string; sortOrder?: "asc" | "desc"; pairStatus?: string; q?: string },
   token?: string
 ): Promise<any> => {
   const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
@@ -241,6 +241,7 @@ export const fetchAllScreens = async (
   if (params?.sortBy) qs.set("sortBy", params.sortBy);
   if (params?.sortOrder) qs.set("sortOrder", params.sortOrder);
   if (params?.q) qs.set("q", params.q);
+  if (params?.pairStatus) qs.set("pairStatus", params.pairStatus);
 
   const path = `/dsadmin/dac/screens${qs.toString() ? `?${qs.toString()}` : ""}`;
   return request<any>(baseCms, path, { token });

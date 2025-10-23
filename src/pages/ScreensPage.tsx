@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,56 @@ interface Screen {
   id: number | string;
   name?: string;
   deviceId?: string;
-  orgId?: number | string;
+  deviceIp?: string;
+  organizationId?: number | string; 
   orgName?: string;
   location?: string;
+  locationId?: number;
+  orientation?: string;
+  placedAt?: string;
+  pairCode?: string;
+  pairCodeExpiresAt?: number;
+  pairStatus?: string;
   status?: string;
-  lastSeen?: string;
+  screenGroupId?: number;
+  defaultShowAssetType?: string;
+  defaultShowAssetId?: string;
+  defaultShowAssetName?: string;
+  selectedScheduleId?: number;
+  deviceUserAgent?: string;
+  deviceApkVersion?: string | null;
+  deviceOsVersion?: string | null;
+  deviceType?: number;
+  base64Image?: string | null;
+  base64ImageUpdatedAt?: number | null;
+  createdBy?: number;
+  updatedBy?: number;
+  createdDate?: number;
+  updatedDate?: number;
 }
+
+const mapDeviceType = (dt?: number | null) => {
+  switch (dt) {
+    case 1:
+      return "Android";
+    case 2:
+      return "Fire Tv";
+    case 3:
+      return "Web Player";
+    case 4:
+      return "Roku OS";
+    case 99:
+      return "Unknown";
+    default:
+      return dt != null ? String(dt) : "—";
+  }
+};
+
+// add helper for online/offline indicator
+const isOnline = (status?: string) => {
+  const s = status?.toUpperCase();
+  return s === "LIVE" || s === "ONLINE";
+};
 
 const ScreensPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,7 +71,8 @@ const ScreensPage = () => {
   const [screens, setScreens] = useState<Screen[]>([]);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(undefined);
-
+  const [pairStatus, setPairStatus] = useState<string>("SCREEN_PAIRED");
+  
   const [serverTotalPages, setServerTotalPages] = useState<number | null>(null);
   const [serverTotalElements, setServerTotalElements] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,9 +83,10 @@ const ScreensPage = () => {
     sortBy: sortBy ?? "id",
     sortOrder: sortOrder ?? "desc",
     q: searchQuery || undefined,
-  }), [currentPage, pageSize, sortBy, sortOrder, searchQuery]);
+    pairStatus,
+  }), [currentPage, pageSize, sortBy, sortOrder, searchQuery, pairStatus]);
 
-  const fetchScreensPage = async (paginationParams: { page: number; size: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string }) => {
+  const fetchScreensPage = async (paginationParams: { page: number; size: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string; pairStatus?: string }) => {
     let mounted = true;
     try {
       setIsLoading(true);
@@ -90,19 +137,34 @@ const ScreensPage = () => {
   const paginatedScreens = screens;
 
   const handleExportCSV = () => {
-    const csvRows = [
-      ["Screen ID", "Name", "Device ID", "Org ID", "Org Name", "Location", "Status", "Last Seen"],
+    const rows = [
+      [
+        "Screen ID",
+        "Name",
+        "Device ID",
+        "Pair Status",
+        "Orientation",
+        "Placed At",
+        "Location",
+        "Org ID",
+        "Default Asset",
+        "Device Type",
+      ],
       ...screens.map((screen) => [
         String(screen.id),
         screen.name || "",
         screen.deviceId || "",
-        String(screen.orgId || ""),
-        screen.orgName || "",
+        screen.pairStatus || "",
+        screen.orientation || "",
+        screen.placedAt || "",
         screen.location || "",
-        screen.status || "",
-        screen.lastSeen || ""
+        String(screen.organizationId ??  ""),
+        screen.defaultShowAssetName || "",
+        mapDeviceType(screen.deviceType),
       ])
-    ].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","));
+    ];
+
+    const csvRows = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","));
     const csvContent = csvRows.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -142,6 +204,17 @@ const ScreensPage = () => {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
+                  <Select value={pairStatus} onValueChange={(val) => { setPairStatus(val); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All</SelectItem>
+                      <SelectItem value="SCREEN_PAIRED">Screen Paired</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
                   <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(parseInt(val, 10)); setCurrentPage(1); }}>
                     <SelectTrigger className="w-[120px]">
                       <SelectValue />
@@ -167,33 +240,49 @@ const ScreensPage = () => {
                   <TableHead>Screen ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Device ID</TableHead>
-                  <TableHead>Org ID</TableHead>
-                  <TableHead>Org Name</TableHead>
+                  <TableHead>Pair Status</TableHead>
+                  <TableHead>Orientation</TableHead>
+                  <TableHead>Placed At</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Org ID</TableHead>
+                  <TableHead>Default Asset</TableHead>
+                  <TableHead>Device Type</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedScreens.map((screen) => (
-                  <TableRow 
-                    key={String(screen.id)} 
+                  <TableRow
+                    key={String(screen.id)}
                     className="cursor-pointer hover:bg-muted/50"
                   >
                     <TableCell className="font-medium">{screen.id}</TableCell>
-                    <TableCell>{screen.name || "—"}</TableCell>
-                    <TableCell>{screen.deviceId || "—"}</TableCell>
-                    <TableCell>{screen.orgId || "—"}</TableCell>
-                    <TableCell>{screen.orgName || "—"}</TableCell>
-                    <TableCell>{screen.location || "—"}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        screen.status?.toUpperCase() === "ONLINE" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-gray-100 text-gray-800"
-                      }`}>
-                        {screen.status || "—"}
-                      </span>
+                    <TableCell className="flex items-center">
+                      <span
+                        className={`inline-block w-3 h-3 rounded-full mr-2 ${isOnline(screen.status) ? "bg-green-500" : "bg-red-500"}`}
+                        title={screen.status ?? "Unknown"}
+                        aria-hidden="true"
+                      />
+                      <span>{screen.name || "—"}</span>
                     </TableCell>
+                    <TableCell>{screen.deviceId || "—"}</TableCell>
+                    <TableCell>{screen.pairStatus || "—"}</TableCell>
+                    <TableCell>{screen.orientation || "—"}</TableCell>
+                    <TableCell>{screen.placedAt || "—"}</TableCell>
+                    <TableCell>{screen.location || screen.locationId || "—"}</TableCell>
+                    <TableCell>
+                      { (screen.organizationId) ? (
+                        <Link
+                          to={`/dshub/organizations/${screen.organizationId}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {screen.organizationId}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>{screen.defaultShowAssetName || "—"} ({screen.defaultShowAssetType})</TableCell>
+                    <TableCell>{mapDeviceType(screen.deviceType)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

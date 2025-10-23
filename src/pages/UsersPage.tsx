@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -205,7 +206,15 @@ const UsersPage: React.FC = () => {
                     <TableCell>{u.status || "—"}</TableCell>
                     <TableCell>{u.active ? "Yes" : "No"}</TableCell>
                     <TableCell>{u.joinedDate ? new Date(String(u.joinedDate)).toLocaleString() : "—"}</TableCell>
-                    <TableCell>{u.organizationId ?? "—"}</TableCell>
+                    <TableCell>
+                      {u.organizationId != null ? (
+                        <Link to={`/dshub/organizations/${u.organizationId}`} className="text-blue-600 hover:underline">
+                          {u.organizationId}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell>{u.locationId ?? "—"}</TableCell>
                   </TableRow>
                 ))}
