@@ -45,6 +45,13 @@ export const INITIAL_SERVICES: Service[] = [
     info: {}
   },
   {
+    id: "sample",
+    name: "Sample Dshub Service",
+    baseUrl: import.meta.env.VITE_SAMPLE_BASE_URL || "http://localhost:9999",
+    status: "UP",
+    info: {}
+  },
+  {
     id: "ans",
     name: "API Node Server (ANS)",
     baseUrl: import.meta.env.VITE_NODE_SERVER_BASE_URL || "http://localhost:5000",

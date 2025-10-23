@@ -188,7 +188,7 @@ export default function TemplateFormPage() {
 
               <div className="space-y-2">
                 <Label>Plan</Label>
-                <RadioGroup value={plan} onValueChange={setPlan}>
+                <RadioGroup value={plan} onValueChange={setPlan} className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="free" id="free" />
                     <Label htmlFor="free" className="font-normal cursor-pointer">
