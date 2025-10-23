@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, FileImage } from "lucide-react";
+import { LayoutDashboard, Building2, Users, FileImage, Monitor } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -17,6 +17,7 @@ const menuItems = [
   { title: "Services", url: "/", icon: LayoutDashboard },
   { title: "Organizations", url: "/dshub/organizations", icon: Building2 },
   { title: "Users", url: "/dshub/users", icon: Users },
+  { title: "Screens", url: "/screens", icon: Monitor },
   { title: "Canva Template", url: "/templates", icon: FileImage },
 ];
 

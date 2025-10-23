@@ -224,3 +224,24 @@ export const fetchSignedUpUsers = async (
   const res = await request<any>(baseUms, path, { token });
   return res;
 };
+
+// New: fetch all screens from CMS with pagination
+export const fetchAllScreens = async (
+  params?: { page?: number; size?: number; sortBy?: string; sortOrder?: "asc" | "desc"; q?: string },
+  token?: string
+): Promise<any> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : undefined;
+  const baseCms = envBase || "http://localhost:9002/cms";
+
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.size !== undefined) qs.set("size", String(params.size));
+  if (params?.sortBy) qs.set("sortBy", params.sortBy);
+  if (params?.sortOrder) qs.set("sortOrder", params.sortOrder);
+  if (params?.q) qs.set("q", params.q);
+
+  const path = `/dsadmin/dac/screens${qs.toString() ? `?${qs.toString()}` : ""}`;
+  return request<any>(baseCms, path, { token });
+};
