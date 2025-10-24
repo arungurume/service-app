@@ -246,3 +246,27 @@ export const fetchAllScreens = async (
   const path = `/dsadmin/dac/screens${qs.toString() ? `?${qs.toString()}` : ""}`;
   return request<any>(baseCms, path, { token });
 };
+
+export const fetchScreenStatus = async (screenId: Id, token?: string): Promise<any> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : undefined;
+  const baseCms = envBase || "http://localhost:9002/cms";
+  const path = `/dsadmin/dac/screens/${screenId}/status`;
+
+  // Expecting an object like { status: "ONLINE" } or { online: true } — caller will normalize
+  return request<any>(baseCms, path, { token });
+};
+
+// New: fetch runtime status for multiple screens by comma-separated ids
+export const fetchScreenStatusByIds = async (ids: string | Id[], token?: string): Promise<any> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CLIENT_STATUS_BASE)
+    ? String((import.meta as any).env.VITE_CLIENT_STATUS_BASE)
+    : undefined;
+  const baseClient = envBase || "http://localhost:9006";
+
+  const idsStr = Array.isArray(ids) ? ids.join(",") : String(ids);
+  const path = `/client-status/v2/${idsStr}`;
+
+  return request<any>(baseClient, path, { token });
+};

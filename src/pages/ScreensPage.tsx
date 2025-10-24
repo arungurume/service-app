@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchAllScreens } from "@/services/dshubService";
+import { fetchAllScreens, fetchScreenStatusByIds } from "@/services/dshubService";
 
 interface Screen {
   id: number | string;
   name?: string;
   deviceId?: string;
   deviceIp?: string;
-  organizationId?: number | string; 
+  organizationId?: number | string;
   orgName?: string;
   location?: string;
   locationId?: number;
@@ -72,7 +72,7 @@ const ScreensPage = () => {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [pairStatus, setPairStatus] = useState<string>("SCREEN_PAIRED");
-  
+
   const [serverTotalPages, setServerTotalPages] = useState<number | null>(null);
   const [serverTotalElements, setServerTotalElements] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,12 +98,40 @@ const ScreensPage = () => {
         setScreens(res.content || []);
         setServerTotalPages(totalPages);
         setServerTotalElements(totalElements);
+
+        // fetch status for all returned screens and merge results
+        try {
+          const items = res.content || [];
+          if (items.length) {
+            const ids = items.map((screen: any) => screen.id).join(",");
+            console.log("Screen IDs for status fetch:", ids);
+            const detailsRes = await fetchScreenStatusByIds(ids);
+            console.log("Screen details:", detailsRes);
+
+            if (mounted && detailsRes && typeof detailsRes === "object") {
+              const merged = items.map((s: any) => {
+                const key = String(s.id);
+                // detailsRes is expected as { "id": boolean, ... }
+                const val = detailsRes.hasOwnProperty(key) ? detailsRes[key] : detailsRes[Number(key)];
+                if (val === true) s.status = "ONLINE";
+                else if (val === false) s.status = "OFFLINE";
+                // leave existing s.status if no info returned
+                return s;
+              });
+              setScreens(merged);
+              console.log("Merged screen data with status:", merged);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch screen details:", err);
+        }
       }
     } catch (err) {
       console.error("Failed to load screens from CMS:", err);
     } finally {
       setIsLoading(false);
     }
+    console.log("Fetch screens page completed");
   };
 
   const goToPage = async (target: number) => {
@@ -158,7 +186,7 @@ const ScreensPage = () => {
         screen.orientation || "",
         screen.placedAt || "",
         screen.location || "",
-        String(screen.organizationId ??  ""),
+        String(screen.organizationId ?? ""),
         screen.defaultShowAssetName || "",
         mapDeviceType(screen.deviceType),
       ])
@@ -182,7 +210,7 @@ const ScreensPage = () => {
         onSearchChange={(val: string) => { setSearchQuery(val); setCurrentPage(1); }}
         onRefresh={() => { fetchScreensPage(pagination); }}
       />
-      
+
       <main className="px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-2">Screens</h1>
@@ -270,7 +298,7 @@ const ScreensPage = () => {
                     <TableCell>{screen.placedAt || "—"}</TableCell>
                     <TableCell>{screen.location || screen.locationId || "—"}</TableCell>
                     <TableCell>
-                      { (screen.organizationId) ? (
+                      {(screen.organizationId) ? (
                         <Link
                           to={`/dshub/organizations/${screen.organizationId}`}
                           className="text-blue-600 hover:underline"
