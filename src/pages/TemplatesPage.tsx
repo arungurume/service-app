@@ -17,7 +17,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 
 // Mock data - replace with actual API call
 const mockTemplates = [
@@ -135,6 +135,10 @@ export default function TemplatesPage() {
     navigate("/templates/new");
   };
 
+  const handleManageCategory = () => {
+    navigate("/category");
+  };
+
   const handleTemplateClick = (id: string) => {
     navigate(`/templates/${id}`);
   };
@@ -151,10 +155,16 @@ export default function TemplatesPage() {
               Manage your Canva templates.
             </p>
           </div>
-          <Button onClick={handleAddTemplate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Template
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleManageCategory} variant="outline" className="gap-2">
+              <FolderOpen className="h-4 w-4" />
+              Manage Category
+            </Button>
+            <Button onClick={handleAddTemplate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Template
+            </Button>
+          </div>
         </div>
 
         <div className="bg-card rounded-lg border shadow-sm">

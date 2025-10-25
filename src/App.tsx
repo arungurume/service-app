@@ -14,6 +14,7 @@ import UsersPage from "./pages/UsersPage";
 import ScreensPage from "./pages/ScreensPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import TemplateFormPage from "./pages/TemplateFormPage";
+import CategoryPage from "./pages/CategoryPage";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -61,6 +62,7 @@ const App = () => {
                   <Route path="/screens" element={<ScreensPage />} />
                   <Route path="/templates" element={<TemplatesPage />} />
                   <Route path="/templates/:id" element={<TemplateFormPage />} />
+                  <Route path="/category" element={<CategoryPage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
