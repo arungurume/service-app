@@ -83,7 +83,7 @@ export const listTemplates = async (
   if (params?.sortOrder) qs.set("sortOrder", params.sortOrder);
   if (params?.categoryId !== undefined && params.categoryId !== null) qs.set("categoryId", String(params.categoryId));
 
-  const path = `/templates${qs.toString() ? `?${qs.toString()}` : ""}`;
+  const path = `/dsadmin/dactc/templates${qs.toString() ? `?${qs.toString()}` : ""}`;
   return request<ApiObject>(base, path, { token });
 };
 

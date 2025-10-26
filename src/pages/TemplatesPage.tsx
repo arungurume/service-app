@@ -132,7 +132,7 @@ export default function TemplatesPage() {
   const currentTemplates = templates.slice(startIndex, endIndex);
 
   const handleAddTemplate = () => {
-    navigate("/templates/new");
+    navigate("/templates/0");
   };
 
   const handleManageCategory = () => {

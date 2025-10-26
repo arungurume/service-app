@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +13,60 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getTemplate, listCategories } from "@/services/canvaTemplateService";
 
 export default function TemplateFormPage() {
   const { id } = useParams();
+  const templateId: number = id ? parseInt(id) : 0;
   const navigate = useNavigate();
-  const isNew = id === "new";
 
   const [title, setTitle] = useState("");
   const [designUrl, setDesignUrl] = useState("");
   const [templateUrl, setTemplateUrl] = useState("");
-  const [category, setCategory] = useState("Restaurant");
+  // fetched canva templates and selected categories state (multiple selection)
+  const [canvaTemplate, setCanvaTemplate] = useState<any>(null);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    const fetchData = async () => {
+      try {
+        // Fetch categories first
+        const catRes = await listCategories();
+        console.log("Fetched categories:", catRes);
+        if (mounted) {
+          setCategories(catRes.content);
+        }
+
+        //Then fetch template details
+        if (templateId) {
+          const templateRes = await getTemplate(templateId);
+          console.log("Fetched templates:", templateRes);
+          if (mounted) {
+            setCanvaTemplate(templateRes.content);
+          }
+        } else {
+          //its a new template, reset form
+          setCanvaTemplate(null);
+        }
+      } catch (e) {
+        // optional: handle error / set fallback categories
+        console.error("Failed to load categories", e);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [templateId]);
+
+  const toggleCategory = (cat: any) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
   const [size, setSize] = useState("Custom");
   const [width, setWidth] = useState("1920");
   const [height, setHeight] = useState("1080");
@@ -30,12 +74,12 @@ export default function TemplateFormPage() {
   const [previewUrl, setPreviewUrl] = useState("");
 
   const handleSaveDraft = () => {
-    console.log("Save draft", { title, designUrl, templateUrl, category, size, width, height, plan });
+    console.log("Save draft", { title, designUrl, templateUrl, categories: selectedCategories, size, width, height, plan });
     navigate("/templates");
   };
 
   const handlePublish = () => {
-    console.log("Publish", { title, designUrl, templateUrl, category, size, width, height, plan });
+    console.log("Publish", { title, designUrl, templateUrl, categories: selectedCategories, size, width, height, plan });
     navigate("/templates");
   };
 
@@ -88,20 +132,22 @@ export default function TemplateFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">
-                  Category <span className="text-destructive">*</span>
+                <Label>
+                  Categories <span className="text-destructive">*</span>
                 </Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger id="category">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Restaurant">Restaurant</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Retail">Retail</SelectItem>
-                    <SelectItem value="Events">Events</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="inline-flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat)}
+                        onChange={() => toggleCategory(cat)}
+                        className="h-4 w-4 rounded border"
+                      />
+                      <span className="text-sm">{cat.name}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
