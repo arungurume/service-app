@@ -23,36 +23,19 @@ export default function TemplateFormPage() {
   const [designUrl, setDesignUrl] = useState("");
   const [templateUrl, setTemplateUrl] = useState("");
   const [category, setCategory] = useState("Restaurant");
-  const [newCategory, setNewCategory] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
   const [size, setSize] = useState("Custom");
   const [width, setWidth] = useState("1920");
   const [height, setHeight] = useState("1080");
   const [plan, setPlan] = useState("free");
   const [previewUrl, setPreviewUrl] = useState("");
 
-  const handleAddCategory = () => {
-    if (newCategory.trim()) {
-      setCategory(newCategory.trim());
-      setNewCategory("");
-    }
-  };
-
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag("");
-    }
-  };
-
   const handleSaveDraft = () => {
-    console.log("Save draft", { title, designUrl, templateUrl, category, tags, size, width, height, plan });
+    console.log("Save draft", { title, designUrl, templateUrl, category, size, width, height, plan });
     navigate("/templates");
   };
 
   const handlePublish = () => {
-    console.log("Publish", { title, designUrl, templateUrl, category, tags, size, width, height, plan });
+    console.log("Publish", { title, designUrl, templateUrl, category, size, width, height, plan });
     navigate("/templates");
   };
 
@@ -119,43 +102,6 @@ export default function TemplateFormPage() {
                     <SelectItem value="Events">Events</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="New category"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
-                  />
-                  <Button onClick={handleAddCategory} variant="outline">
-                    Add
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
-                <div className="flex gap-2 mb-2 flex-wrap">
-                  {tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="tags"
-                    placeholder="Type tag and press Enter"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                  />
-                  <Button onClick={handleAddTag} variant="outline">
-                    Add
-                  </Button>
-                </div>
               </div>
 
               <div className="space-y-2">

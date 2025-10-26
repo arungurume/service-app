@@ -260,8 +260,8 @@ export const fetchScreenStatus = async (screenId: Id, token?: string): Promise<a
 
 // New: fetch runtime status for multiple screens by comma-separated ids
 export const fetchScreenStatusByIds = async (ids: string | Id[], token?: string): Promise<any> => {
-  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CLIENT_STATUS_BASE)
-    ? String((import.meta as any).env.VITE_CLIENT_STATUS_BASE)
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_SMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_SMS_BASE_URL)
     : undefined;
   const baseClient = envBase || "http://localhost:9006";
 

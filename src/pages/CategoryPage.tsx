@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,28 +55,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { listCategories, createCategory, updateCategory } from "@/services/canvaTemplateService";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
-  description: string;
   orderNo: number;
+  // description omitted from UI but may exist on server
+  description?: string;
 }
-
-// Mock data
-const mockCategories: Category[] = [
-  { id: "1", name: "Restaurant", description: "Restaurant menu templates", orderNo: 1 },
-  { id: "2", name: "Marketing", description: "Marketing and promotional templates", orderNo: 2 },
-  { id: "3", name: "Social Media", description: "Social media post templates", orderNo: 3 },
-  { id: "4", name: "Events", description: "Event flyers and invitations", orderNo: 4 },
-  { id: "5", name: "Business", description: "Business presentations and documents", orderNo: 5 },
-  { id: "6", name: "Education", description: "Educational materials", orderNo: 6 },
-  { id: "7", name: "Health", description: "Health and wellness templates", orderNo: 7 },
-  { id: "8", name: "Fashion", description: "Fashion and style templates", orderNo: 8 },
-  { id: "9", name: "Travel", description: "Travel and tourism templates", orderNo: 9 },
-  { id: "10", name: "Technology", description: "Tech and software templates", orderNo: 10 },
-  { id: "11", name: "Real Estate", description: "Real estate and property templates", orderNo: 11 },
-];
 
 const ITEMS_PER_PAGE = 10;
 
@@ -105,7 +92,6 @@ function SortableRow({ category, onEdit, onDelete }: SortableRowProps) {
         </div>
       </TableCell>
       <TableCell className="font-medium">{category.name}</TableCell>
-      <TableCell>{category.description}</TableCell>
       <TableCell className="text-center">{category.orderNo}</TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
@@ -130,7 +116,7 @@ function SortableRow({ category, onEdit, onDelete }: SortableRowProps) {
 }
 
 export default function CategoryPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -139,8 +125,23 @@ export default function CategoryPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
   });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetch = async () => {
+      try {
+        const res = await listCategories();
+        if (!mounted) return;
+        setCategories(res.content);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        toast.error("Failed to load categories");
+      }
+    };
+    fetch();
+    return () => { mounted = false; };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -151,8 +152,7 @@ export default function CategoryPage() {
 
   const filteredCategories = categories.filter(
     (category) =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchQuery.toLowerCase())
+      category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredCategories.length / ITEMS_PER_PAGE);
@@ -179,7 +179,7 @@ export default function CategoryPage() {
 
   const handleAddCategory = () => {
     setEditingCategory(null);
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "" });
     setIsDialogOpen(true);
   };
 
@@ -187,7 +187,6 @@ export default function CategoryPage() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description,
     });
     setIsDialogOpen(true);
   };
@@ -206,34 +205,55 @@ export default function CategoryPage() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       toast.error("Category name is required");
       return;
     }
 
+    // Editing existing category
     if (editingCategory) {
-      setCategories(
-        categories.map((cat) =>
-          cat.id === editingCategory.id
-            ? { ...cat, name: formData.name, description: formData.description }
+      try {
+        const res = await updateCategory(editingCategory.id, { name: formData.name });
+        const updated = categories.map((cat) =>
+          String(cat.id) === String(editingCategory.id)
+            ? {
+                ...cat,
+                name: res?.name ?? formData.name,
+                orderNo: typeof res?.orderNo === "number" ? res.orderNo : cat.orderNo,
+              }
             : cat
-        )
-      );
-      toast.success("Category updated successfully");
-    } else {
-      const newCategory: Category = {
-        id: Date.now().toString(),
-        name: formData.name,
-        description: formData.description,
-        orderNo: categories.length + 1,
-      };
-      setCategories([...categories, newCategory]);
-      toast.success("Category added successfully");
+        );
+        setCategories(updated);
+        toast.success("Category updated successfully");
+      } catch (err) {
+        console.error("Failed to update category:", err);
+        toast.error("Failed to update category");
+      } finally {
+        setIsDialogOpen(false);
+        setFormData({ name: "" });
+      }
+      return;
     }
 
-    setIsDialogOpen(false);
-    setFormData({ name: "", description: "" });
+    // Creating new category
+    try {
+      const res = await createCategory({ name: formData.name });
+      const newCat: Category = {
+        id: res?.id,
+        name: res?.name ?? formData.name,
+        orderNo: res?.orderNo,
+        description: res?.description,
+      };
+      setCategories((prev) => [...prev, newCat]);
+      toast.success("Category added successfully");
+    } catch (err) {
+      console.error("Failed to create category:", err);
+      toast.error("Failed to create category");
+    } finally {
+      setIsDialogOpen(false);
+      setFormData({ name: "" });
+    }
   };
 
   return (
@@ -277,7 +297,6 @@ export default function CategoryPage() {
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
                   <TableHead className="text-center">Order</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -363,17 +382,6 @@ export default function CategoryPage() {
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                placeholder="Enter category description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
                 }
               />
             </div>
