@@ -44,7 +44,7 @@ export interface CanvaTemplate {
   title: string;
   designUrl?: string;
   templateUrl?: string;
-  categoryId?: Id | null;
+  categories?: TemplateCategory[];
   tags?: string[];
   size?: string;
   width?: number;
@@ -87,9 +87,11 @@ export const listTemplates = async (
   return request<ApiObject>(base, path, { token });
 };
 
-export const getTemplate = async (templateId: Id, token?: string): Promise<CanvaTemplate> => {
+export const getTemplate = async (templateId: Id, includeCategories = false, token?: string): Promise<CanvaTemplate> => {
   const base = getBase();
-  return request<CanvaTemplate>(base, `/dsadmin/dactc/templates/${templateId}`, { token });
+  const qs = new URLSearchParams();
+  if (includeCategories) qs.set("includeCategories", "true");
+  return request<CanvaTemplate>(base, `/dsadmin/dactc/templates/${templateId}?${qs.toString()}`, { token });
 };
 
 export const createTemplate = async (payload: Partial<CanvaTemplate>, token?: string): Promise<CanvaTemplate> => {

@@ -13,19 +13,15 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getTemplate, listCategories } from "@/services/canvaTemplateService";
+import { getTemplate, listCategories, createTemplate, updateTemplate } from "@/services/canvaTemplateService";
 
 export default function TemplateFormPage() {
   const { id } = useParams();
   const templateId: number = id ? parseInt(id) : 0;
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("");
-  const [designUrl, setDesignUrl] = useState("");
-  const [templateUrl, setTemplateUrl] = useState("");
-  // fetched canva templates and selected categories state (multiple selection)
-  const [canvaTemplate, setCanvaTemplate] = useState<any>(null);
-  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+  // single source of truth for the form
+  const [canvaTemplate, setCanvaTemplate] = useState<any | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   useEffect(() => {
     let mounted = true;
@@ -35,19 +31,29 @@ export default function TemplateFormPage() {
         const catRes = await listCategories();
         console.log("Fetched categories:", catRes);
         if (mounted) {
-          setCategories(catRes.content);
+          setCategories(catRes.content || []);
         }
 
-        //Then fetch template details
+        // Then fetch template details (single object). Set defaults for new template.
         if (templateId) {
-          const templateRes = await getTemplate(templateId);
-          console.log("Fetched templates:", templateRes);
+          const templateRes = await getTemplate(templateId, true);
+          console.log("Fetched template:", templateRes);
           if (mounted) {
-            setCanvaTemplate(templateRes.content);
+            setCanvaTemplate(templateRes || null);
           }
         } else {
-          //its a new template, reset form
-          setCanvaTemplate(null);
+          // new template defaults
+          if (mounted) {
+            setCanvaTemplate({
+              title: "",
+              designUrl: "",
+              templateUrl: "",
+              categories: [],
+              width: 1920,
+              height: 1080,
+              plan: "FREE",
+            });
+          }
         }
       } catch (e) {
         // optional: handle error / set fallback categories
@@ -63,25 +69,52 @@ export default function TemplateFormPage() {
   }, [templateId]);
 
   const toggleCategory = (cat: any) => {
-    setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
-    );
-  };
-  const [size, setSize] = useState("Custom");
-  const [width, setWidth] = useState("1920");
-  const [height, setHeight] = useState("1080");
-  const [plan, setPlan] = useState("free");
-  const [previewUrl, setPreviewUrl] = useState("");
-
-  const handleSaveDraft = () => {
-    console.log("Save draft", { title, designUrl, templateUrl, categories: selectedCategories, size, width, height, plan });
-    navigate("/templates");
+    setCanvaTemplate((prev: any) => {
+      const prevCats = Array.isArray(prev?.categories) ? prev.categories : [];
+      const exists = prevCats.some((c: any) => String(c.id) === String(cat.id));
+      const newCats = exists
+        ? prevCats.filter((c: any) => String(c.id) !== String(cat.id))
+        : [...prevCats, cat];
+      return { ...(prev || {}), categories: newCats };
+    });
   };
 
-  const handlePublish = () => {
-    console.log("Publish", { title, designUrl, templateUrl, categories: selectedCategories, size, width, height, plan });
-    navigate("/templates");
+  const getSizeValue = () => {
+    if (!canvaTemplate) return "Custom";
+    const w = canvaTemplate.width;
+    const h = canvaTemplate.height;
+    if (!w || !h) return "Custom";
+    const s = `${w}x${h}`;
+    if (s === "1920x1080") return "1920x1080";
+    if (s === "1080x1920") return "1080x1920";
+    return "Custom";
   };
+
+  const saveTemplate = async (publish = false) => {
+    if (!canvaTemplate) return;
+    try {
+      const payload = {
+        ...canvaTemplate,
+        status: publish ? "PUBLISHED" : (canvaTemplate.status ?? "DRAFT"),
+      };
+
+      if (templateId) {
+        await updateTemplate(templateId, payload);
+        console.log("Template updated", templateId);
+      } else {
+        const created = await createTemplate(payload);
+        console.log("Template created", created);
+      }
+
+      navigate("/templates");
+    } catch (err) {
+      console.error("Failed to save template", err);
+      // optionally show user-facing error here
+    }
+  };
+
+  const handleSaveDraft = () => saveTemplate(false);
+  const handlePublish = () => saveTemplate(true);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -103,8 +136,10 @@ export default function TemplateFormPage() {
                 </Label>
                 <Input
                   id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={canvaTemplate?.title ?? ""}
+                  onChange={(e) =>
+                    setCanvaTemplate((prev: any) => ({ ...(prev || {}), title: e.target.value }))
+                  }
                   placeholder="Enter template title"
                 />
               </div>
@@ -115,8 +150,10 @@ export default function TemplateFormPage() {
                 </Label>
                 <Input
                   id="designUrl"
-                  value={designUrl}
-                  onChange={(e) => setDesignUrl(e.target.value)}
+                  value={canvaTemplate?.designUrl ?? ""}
+                  onChange={(e) =>
+                    setCanvaTemplate((prev: any) => ({ ...(prev || {}), designUrl: e.target.value }))
+                  }
                   placeholder="https://www.canva.com/design/..."
                 />
               </div>
@@ -125,8 +162,10 @@ export default function TemplateFormPage() {
                 <Label htmlFor="templateUrl">Template URL</Label>
                 <Input
                   id="templateUrl"
-                  value={templateUrl}
-                  onChange={(e) => setTemplateUrl(e.target.value)}
+                  value={canvaTemplate?.templateUrl ?? ""}
+                  onChange={(e) =>
+                    setCanvaTemplate((prev: any) => ({ ...(prev || {}), templateUrl: e.target.value }))
+                  }
                   placeholder="https://www.canva.com/design/... (template share link)"
                 />
               </div>
@@ -136,23 +175,39 @@ export default function TemplateFormPage() {
                   Categories <span className="text-destructive">*</span>
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {categories.map((cat) => (
-                    <label key={cat.id} className="inline-flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(cat)}
-                        onChange={() => toggleCategory(cat)}
-                        className="h-4 w-4 rounded border"
-                      />
-                      <span className="text-sm">{cat.name}</span>
-                    </label>
-                  ))}
+                  {categories.map((cat) => {
+                    const checked = Array.isArray(canvaTemplate?.categories)
+                      ? canvaTemplate.categories.some((c: any) => String(c.id) === String(cat.id))
+                      : false;
+                    return (
+                      <label key={cat.id} className="inline-flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCategory(cat)}
+                          className="h-4 w-4 rounded border"
+                        />
+                        <span className="text-sm">{cat.name}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="size">Size</Label>
-                <Select value={size} onValueChange={setSize}>
+                <Select
+                  value={getSizeValue()}
+                  onValueChange={(v: string) => {
+                    if (!canvaTemplate) return;
+                    if (v === "Custom") {
+                      // leave as-is (user can edit width/height)
+                      return;
+                    }
+                    const [w, h] = v.split("x").map((n) => parseInt(n, 10) || 0);
+                    setCanvaTemplate((prev: any) => ({ ...(prev || {}), width: w, height: h }));
+                  }}
+                >
                   <SelectTrigger id="size">
                     <SelectValue />
                   </SelectTrigger>
@@ -162,17 +217,28 @@ export default function TemplateFormPage() {
                     <SelectItem value="1080x1920">1080x1920</SelectItem>
                   </SelectContent>
                 </Select>
-                {size === "Custom" && (
+
+                {getSizeValue() === "Custom" && (
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <Input
                       placeholder="Width"
-                      value={width}
-                      onChange={(e) => setWidth(e.target.value)}
+                      value={String(canvaTemplate?.width ?? "")}
+                      onChange={(e) =>
+                        setCanvaTemplate((prev: any) => ({
+                          ...(prev || {}),
+                          width: parseInt(e.target.value || "0", 10) || 0,
+                        }))
+                      }
                     />
                     <Input
                       placeholder="Height"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
+                      value={String(canvaTemplate?.height ?? "")}
+                      onChange={(e) =>
+                        setCanvaTemplate((prev: any) => ({
+                          ...(prev || {}),
+                          height: parseInt(e.target.value || "0", 10) || 0,
+                        }))
+                      }
                     />
                   </div>
                 )}
@@ -180,7 +246,13 @@ export default function TemplateFormPage() {
 
               <div className="space-y-2">
                 <Label>Plan</Label>
-                <RadioGroup value={plan} onValueChange={setPlan} className="flex items-center space-x-6">
+                <RadioGroup
+                  value={(canvaTemplate?.plan ?? "FREE").toLowerCase()}
+                  onValueChange={(v: string) =>
+                    setCanvaTemplate((prev: any) => ({ ...(prev || {}), plan: String(v).toUpperCase() }))
+                  }
+                  className="flex items-center space-x-6"
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="free" id="free" />
                     <Label htmlFor="free" className="font-normal cursor-pointer">
@@ -221,9 +293,9 @@ export default function TemplateFormPage() {
                 </TabsList>
                 <TabsContent value="design" className="mt-4">
                   <div className="bg-muted rounded-lg h-[500px] flex items-center justify-center text-muted-foreground">
-                    {designUrl ? (
+                    {canvaTemplate?.designUrl ? (
                       <iframe
-                        src={designUrl}
+                        src={canvaTemplate.designUrl}
                         className="w-full h-full rounded-lg"
                         title="Design Preview"
                       />
@@ -234,22 +306,24 @@ export default function TemplateFormPage() {
                 </TabsContent>
                 <TabsContent value="template" className="mt-4">
                   <div className="bg-muted rounded-lg h-[500px] flex items-center justify-center text-muted-foreground">
-                    {templateUrl ? (
+                    {canvaTemplate?.templateUrl ? (
                       <iframe
-                        src={templateUrl}
-                        className="w-full h-full rounded-lg"
-                        title="Template Preview"
+                        src={canvaTemplate.templateUrl}
+                        width="800"
+                        height="450"
+                        style="border: none; border-radius: 10px;"
+                        allowfullscreen
                       />
                     ) : (
                       "Paste a link to preview"
                     )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
+    </div >
   );
 }

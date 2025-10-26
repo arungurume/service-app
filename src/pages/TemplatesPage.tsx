@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,118 +18,51 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Plus, FolderOpen } from "lucide-react";
-
-// Mock data - replace with actual API call
-const mockTemplates = [
-  {
-    id: "1",
-    title: "Cocktail Menu – Neon",
-    category: "Restaurant",
-    plan: "free",
-    size: "1920x1080",
-    updated: "10/17/2025, 12:06:13 PM",
-  },
-  {
-    id: "2",
-    title: "Summer Sale Banner",
-    category: "Marketing",
-    plan: "paid",
-    size: "1920x1080",
-    updated: "10/16/2025, 10:30:00 AM",
-  },
-  {
-    id: "3",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "4",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "5",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "6",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "7",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "8",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "9",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "10",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "11",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-  {
-    id: "12",
-    title: "Coffee Shop Menu",
-    category: "Restaurant",
-    plan: "free",
-    size: "1080x1920",
-    updated: "10/15/2025, 03:15:45 PM",
-  },
-];
+import { listTemplates } from "@/services/canvaTemplateService";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  const [templates] = useState(mockTemplates);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const totalPages = Math.ceil(templates.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentTemplates = templates.slice(startIndex, endIndex);
+  const fetchTemplates = async (page = 0) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // page is zero-based for the API
+      const res = await listTemplates({ page, size: ITEMS_PER_PAGE });
+      const items = Array.isArray(res?.content) ? res.content : [];
+      setTemplates(items);
+      // prefer server-provided totalPages, fallback to computed value
+      if (typeof res?.totalPages === "number") {
+        setTotalPages(res.totalPages);
+      } else if (typeof res?.totalElements === "number") {
+        setTotalPages(Math.max(1, Math.ceil(res.totalElements / ITEMS_PER_PAGE)));
+      } else {
+        setTotalPages(Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE)));
+      }
+    } catch (e: any) {
+      console.error("Failed to load templates", e);
+      setError(e?.message || "Failed to load templates");
+      setTemplates([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // API page is zero-based
+    fetchTemplates(currentPage - 1);
+  }, [currentPage]);
+
+  const startIndex = 0; // server returns only current page so we just display templates
+  const currentTemplates = templates;
 
   const handleAddTemplate = () => {
     navigate("/templates/0");
@@ -168,30 +101,43 @@ export default function TemplatesPage() {
         </div>
 
         <div className="bg-card rounded-lg border shadow-sm">
+          {loading && templates.length === 0 ? (
+            <div className="p-6 text-muted-foreground">Loading templates...</div>
+          ) : error ? (
+            <div className="p-6 text-destructive">Error: {error}</div>
+          ) : null}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentTemplates.map((template) => (
-                <TableRow
-                  key={template.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleTemplateClick(template.id)}
-                >
-                  <TableCell className="font-medium">{template.title}</TableCell>
-                  <TableCell>{template.category}</TableCell>
-                  <TableCell>{template.plan}</TableCell>
-                  <TableCell>{template.size}</TableCell>
-                  <TableCell>{template.updated}</TableCell>
-                </TableRow>
-              ))}
+              {currentTemplates.map((template: any) => {
+                const size = template.width && template.height ? `${template.width}x${template.height}` : template.size || "-";
+                const plan = template.plan ? String(template.plan).toLowerCase() : "-";
+                const status = template.status ? String(template.status).toLowerCase() : "-"; 
+                const tags = template.tags ? String(template.tags) : "-";
+                const updated = template.updatedAt || template.updated || template.createdAt || template.createdDate;
+                const updatedDisplay = updated ? new Date(updated).toLocaleString() : "-";
+                return (
+                  <TableRow
+                    key={template.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleTemplateClick(String(template.id))}
+                  >
+                    <TableCell className="font-medium">{template.title || "-"}</TableCell>
+                    <TableCell>{status}</TableCell>
+                    <TableCell>{plan}</TableCell>
+                    <TableCell>{size}</TableCell>
+                    <TableCell>{updatedDisplay}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
