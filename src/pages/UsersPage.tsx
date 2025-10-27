@@ -18,6 +18,8 @@ interface User {
   status?: string;
   active?: boolean;
   joinedDate?: number | string;
+  lastLoginDateTime?: number | string;
+  loginProviderType?: string;
   organizationId?: number;
   locationId?: number;
   roles?: { id?: number | string; name?: string }[];
@@ -183,12 +185,13 @@ const UsersPage: React.FC = () => {
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>Username</TableHead>
-                  <TableHead>First Name</TableHead>
-                  <TableHead>Last Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Login Type</TableHead>
+                  
                   <TableHead>Roles</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Active</TableHead>
+                  <TableHead>Last Login</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Org ID</TableHead>
                   <TableHead>Location ID</TableHead>
@@ -199,12 +202,13 @@ const UsersPage: React.FC = () => {
                   <TableRow key={String(u.id)} className="cursor-pointer hover:bg-muted/50">
                     <TableCell className="font-medium">{u.id}</TableCell>
                     <TableCell>{u.userName || "—"}</TableCell>
-                    <TableCell>{u.firstName || "—"}</TableCell>
-                    <TableCell>{u.lastName || "—"}</TableCell>
-                    <TableCell>{u.email || "—"}</TableCell>
+                    <TableCell>{u.firstName || "—"} {u.lastName || "—"}</TableCell>
+                    <TableCell>{u.loginProviderType || "—"}</TableCell>
+                    
                     <TableCell>{(u.roles || []).map(r => r.name).filter(Boolean).join(", ") || "—"}</TableCell>
                     <TableCell>{u.status || "—"}</TableCell>
                     <TableCell>{u.active ? "Yes" : "No"}</TableCell>
+                    <TableCell>{u.lastLoginDateTime ? new Date(String(u.lastLoginDateTime)).toLocaleString() : "—"}</TableCell>
                     <TableCell>{u.joinedDate ? new Date(String(u.joinedDate)).toLocaleString() : "—"}</TableCell>
                     <TableCell>
                       {u.organizationId != null ? (
