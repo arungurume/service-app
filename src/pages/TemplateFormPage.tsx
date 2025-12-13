@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +14,11 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getTemplate, listCategories, createTemplate, updateTemplate } from "@/services/canvaTemplateService";
+import { getTemplate, listCategories, createTemplate, updateTemplate, getCanvaDesign } from "@/services/canvaTemplateService";
 
 export default function TemplateFormPage() {
   const { id } = useParams();
-  const templateId: number = id ? parseInt(id) : 0;
+  const canvaDesignId: string = id ? id : "";
   const navigate = useNavigate();
 
   // single source of truth for the form
@@ -35,25 +36,21 @@ export default function TemplateFormPage() {
         }
 
         // Then fetch template details (single object). Set defaults for new template.
-        if (templateId) {
-          const templateRes = await getTemplate(templateId, true);
-          console.log("Fetched template:", templateRes);
-          if (mounted) {
-            setCanvaTemplate(templateRes || null);
+        if (canvaDesignId) {
+          const canvaRes = await getCanvaDesign(canvaDesignId);
+          console.log("Fetched design from canva:", canvaRes);
+          if (canvaRes) {
+            const canvaDesign = canvaRes.design;
+            const template = await getTemplate(null, canvaDesign.id, true);
+            console.log("Fetched desing from db:", template);
+            if (mounted) {
+              const merged = mapCanvaAndDbToTemplate(canvaDesign, template);
+              console.log("Merged template:", merged);
+              setCanvaTemplate(merged);
+            }
           }
         } else {
-          // new template defaults
-          if (mounted) {
-            setCanvaTemplate({
-              title: "",
-              designUrl: "",
-              templateUrl: "",
-              categories: [],
-              width: 1920,
-              height: 1080,
-              plan: "FREE",
-            });
-          }
+          console.log("No canva design id");
         }
       } catch (e) {
         // optional: handle error / set fallback categories
@@ -66,7 +63,31 @@ export default function TemplateFormPage() {
     return () => {
       mounted = false;
     };
-  }, [templateId]);
+  }, [canvaDesignId]);
+
+  const mapCanvaAndDbToTemplate = (
+    canvaDesign: any,
+    dbRes: any
+  ): any => {
+    const design = canvaDesign ?? {};
+
+    return {
+      id: dbRes?.id ?? 0,
+      canvaDesignId: design.id ?? "",
+      thumbnailUrl: design.thumbnail?.url ?? "",
+      title: design.title ?? dbRes?.title ?? "",
+      viewUrl: design.urls?.view_url ?? "",
+      editUrl: design.urls?.edit_url ?? "",
+      designUrl: design.urls?.edit_url ?? "",
+      templateUrl: dbRes?.templateUrl ?? "",
+      categories: dbRes?.categories ?? [],
+      width: dbRes?.width ?? 1920,
+      height: dbRes?.height ?? 1080,
+      plan: dbRes?.plan ?? "FREE",
+      images: dbRes?.images ?? []
+    };
+  }
+
 
   const toggleCategory = (cat: any) => {
     setCanvaTemplate((prev: any) => {
@@ -98,15 +119,15 @@ export default function TemplateFormPage() {
         status: publish ? "PUBLISHED" : (canvaTemplate.status ?? "DRAFT"),
       };
 
-      if (templateId) {
-        await updateTemplate(templateId, payload);
-        console.log("Template updated", templateId);
+      if (payload.id) {
+        await updateTemplate(payload.id, payload);
+        console.log("Template updated", payload.id);
       } else {
         const created = await createTemplate(payload);
         console.log("Template created", created);
       }
 
-      navigate("/templates");
+      navigate("/canva-templates");
     } catch (err) {
       console.error("Failed to save template", err);
       // optionally show user-facing error here
@@ -115,6 +136,29 @@ export default function TemplateFormPage() {
 
   const handleSaveDraft = () => saveTemplate(false);
   const handlePublish = () => saveTemplate(true);
+
+  const addImageField = () => {
+    setCanvaTemplate((prev: any) => {
+      const prevImages = Array.isArray(prev?.images) ? prev.images : [];
+      return { ...(prev || {}), images: [...prevImages, { id: 0, url: "" }] };
+    });
+  };
+
+  const removeImageField = (index: number) => {
+    setCanvaTemplate((prev: any) => {
+      const prevImages = Array.isArray(prev?.images) ? prev.images : [];
+      return { ...(prev || {}), images: prevImages.filter((_: any, i: number) => i !== index) };
+    });
+  };
+
+  const updateImageField = (index: number, value: string) => {
+    setCanvaTemplate((prev: any) => {
+      const prevImages = Array.isArray(prev?.images) ? prev.images : [];
+      const newImages = [...prevImages];
+      newImages[index] = { ...newImages[index], url: value };
+      return { ...(prev || {}), images: newImages };
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -130,6 +174,21 @@ export default function TemplateFormPage() {
           {/* Form Section */}
           <Card>
             <CardContent className="p-6 space-y-6">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md border">
+                <div>
+                  Canva Design ID: <span className="font-medium text-foreground">{canvaTemplate?.canvaDesignId || "N/A"}</span>
+                </div>
+                <div className="h-4 w-px bg-border"></div>
+                <div>
+                  DSHub ID: <span className="font-medium text-foreground">{canvaTemplate?.id ? canvaTemplate.id : "Not Synced"}</span>
+                </div>
+                {canvaTemplate?.id && canvaTemplate?.canvaDesignId ? (
+                  <div className="ml-auto" title="Synced with Database">
+                    <RefreshCw className="h-4 w-4 text-green-600" />
+                  </div>
+                ) : null}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">
                   Title <span className="text-destructive">*</span>
@@ -195,6 +254,38 @@ export default function TemplateFormPage() {
               </div>
 
               <div className="space-y-2">
+                <Label>Image URLs</Label>
+                <div className="space-y-2">
+                  {Array.isArray(canvaTemplate?.images) && canvaTemplate.images.map((img: any, idx: number) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input
+                        value={img?.url ?? ""}
+                        onChange={(e) => updateImageField(idx, e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={() => removeImageField(idx)}
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    onClick={addImageField}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    + Add Image URL
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="size">Size</Label>
                 <Select
                   value={getSizeValue()}
@@ -202,6 +293,11 @@ export default function TemplateFormPage() {
                     if (!canvaTemplate) return;
                     if (v === "Custom") {
                       // leave as-is (user can edit width/height)
+                      setCanvaTemplate((prev: any) => ({
+                        ...(prev || {}),
+                        width: 0,
+                        height: 0,
+                      }));
                       return;
                     }
                     const [w, h] = v.split("x").map((n) => parseInt(n, 10) || 0);
@@ -282,25 +378,25 @@ export default function TemplateFormPage() {
           {/* Preview Section */}
           <Card>
             <CardContent className="p-6">
-              <Tabs defaultValue="design">
+              <Tabs defaultValue="thumbnail">
                 <TabsList className="w-full">
-                  <TabsTrigger value="design" className="flex-1">
-                    Design
+                  <TabsTrigger value="thumbnail" className="flex-1">
+                    Thumbnail
                   </TabsTrigger>
                   <TabsTrigger value="template" className="flex-1">
                     Template
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="design" className="mt-4">
-                  <div className="bg-muted rounded-lg h-[500px] flex items-center justify-center text-muted-foreground">
-                    {canvaTemplate?.designUrl ? (
-                      <iframe
-                        src={canvaTemplate.designUrl}
-                        className="w-full h-full rounded-lg"
-                        title="Design Preview"
+                <TabsContent value="thumbnail" className="mt-4">
+                  <div className="bg-muted rounded-lg h-[500px] flex items-center justify-center text-muted-foreground overflow-hidden">
+                    {canvaTemplate?.thumbnailUrl ? (
+                      <img
+                        src={canvaTemplate.thumbnailUrl}
+                        alt="Thumbnail"
+                        className="w-full h-full object-contain"
                       />
                     ) : (
-                      "Paste a link to preview"
+                      "No thumbnail available"
                     )}
                   </div>
                 </TabsContent>
@@ -317,13 +413,13 @@ export default function TemplateFormPage() {
                     ) : (
                       "Paste a link to preview"
                     )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
     </div >
   );
 }

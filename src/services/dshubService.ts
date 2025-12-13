@@ -270,3 +270,14 @@ export const fetchScreenStatusByIds = async (ids: string | Id[], token?: string)
 
   return request<any>(baseClient, path, { token });
 };
+
+export const fetchConnectedScreens = async (token?: string): Promise<any> => {
+  const envBase = (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_SMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_SMS_BASE_URL)
+    : undefined;
+  const baseClient = envBase || "http://localhost:9006";
+
+  const path = `/connected-dshub-players`;
+
+  return request<any>(baseClient, path, { token });
+};

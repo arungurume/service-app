@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchAllScreens, fetchScreenStatusByIds } from "@/services/dshubService";
+import { fetchAllScreens, fetchConnectedScreens, fetchScreenStatusByIds } from "@/services/dshubService";
 
 interface Screen {
   id: number | string;
@@ -72,6 +72,7 @@ const ScreensPage = () => {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [pairStatus, setPairStatus] = useState<string>("SCREEN_PAIRED");
+  const [connectedScreenCount, setConnectedScreenCount] = useState<number | 0>(0);
 
   const [serverTotalPages, setServerTotalPages] = useState<number | null>(null);
   const [serverTotalElements, setServerTotalElements] = useState<number | null>(null);
@@ -156,7 +157,24 @@ const ScreensPage = () => {
 
   useEffect(() => {
     fetchScreensPage(pagination);
+    fetchConnectedAllScreens();
   }, [pagination]);
+
+
+  const fetchConnectedAllScreens = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetchConnectedScreens();
+      setConnectedScreenCount(res?.PLAYER?.length || 0);
+      console.log("Screens from CMS:", res);
+    } catch (err) {
+      console.error("Failed to load screens from CMS:", err);
+    } finally {
+      setIsLoading(false);
+    }
+    console.log("Fetch screens page completed");
+  };
+
 
   const totalPages = serverTotalPages ?? Math.max(1, Math.ceil((serverTotalElements ?? screens.length) / pageSize));
   const totalElements = serverTotalElements ?? screens.length;
@@ -213,7 +231,12 @@ const ScreensPage = () => {
 
       <main className="px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Screens</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            Screens&nbsp;
+            <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+              {connectedScreenCount}
+            </span>
+          </h1>
           <p className="text-muted-foreground">
             Manage all screens across organizations.
           </p>

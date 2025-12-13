@@ -69,6 +69,11 @@ const getBase = () =>
     ? String((import.meta as any).env.VITE_TMS_BASE_URL)
     : "http://localhost:9004/canva";
 
+const getCmsBase = () =>
+  (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_CMS_BASE_URL)
+    ? String((import.meta as any).env.VITE_CMS_BASE_URL)
+    : "http://localhost:9004/canva";
+
 // CRUD functions for templates
 export const listTemplates = async (
   params?: { page?: number; size?: number; q?: string; sortBy?: string; sortOrder?: "asc" | "desc"; categoryId?: Id },
@@ -87,12 +92,18 @@ export const listTemplates = async (
   return request<ApiObject>(base, path, { token });
 };
 
-export const getTemplate = async (templateId: Id, includeCategories = false, token?: string): Promise<CanvaTemplate> => {
+export const getTemplate = async (templateId: Id, canvaDesignId: Id, includeCategories = false, token?: string): Promise<CanvaTemplate> => {
   const base = getBase();
   const qs = new URLSearchParams();
+  if (templateId) {
+    qs.set("templateId", String(templateId));
+  } else if (canvaDesignId) {
+    qs.set("canvaDesignId", String(canvaDesignId));
+  }
   if (includeCategories) qs.set("includeCategories", "true");
-  return request<CanvaTemplate>(base, `/dsadmin/dactc/templates/${templateId}?${qs.toString()}`, { token });
+  return request<CanvaTemplate>(base, `/dsadmin/dactc/template/detail?${qs.toString()}`, { token });
 };
+
 
 export const createTemplate = async (payload: Partial<CanvaTemplate>, token?: string): Promise<CanvaTemplate> => {
   const base = getBase();
@@ -135,6 +146,20 @@ export const deleteCategory = async (categoryId: Id, token?: string): Promise<vo
   await request<void>(base, `/dsadmin/dactc/categories/${categoryId}`, { method: "DELETE", token });
 };
 
+export const listCanvaDesigns = async (params?: { continuation?: string }): Promise<ApiObject> => {
+  const base = getCmsBase();
+  const qs = new URLSearchParams();
+  if (params?.continuation) qs.set("continuation", params.continuation);
+
+  const path = `/api/v1/canva/dshub/designs${qs.toString() ? `?${qs.toString()}` : ""}`;
+  return request<ApiObject>(base, path);
+};
+
+export const getCanvaDesign = async (canvaDesignId: Id): Promise<CanvaTemplate> => {
+  const base = getCmsBase();
+  return request<CanvaTemplate>(base, `/api/v1/canva/dshub/designs/${canvaDesignId}`);
+};
+
 // Factory similar to createDSHubClient
 export const createCanvaClient = (token?: string) => ({
   listTemplates: (params?: any) => listTemplates(params, token),
@@ -147,4 +172,5 @@ export const createCanvaClient = (token?: string) => ({
   createCategory: (payload: Partial<TemplateCategory>) => createCategory(payload, token),
   updateCategory: (id: Id, payload: Partial<TemplateCategory>) => updateCategory(id, payload, token),
   deleteCategory: (id: Id) => deleteCategory(id, token),
+  listCanvaDesigns: (params?: { continuation?: string }) => listCanvaDesigns(params),
 });

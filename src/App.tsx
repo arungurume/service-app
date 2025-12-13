@@ -15,6 +15,7 @@ import ScreensPage from "./pages/ScreensPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import TemplateFormPage from "./pages/TemplateFormPage";
 import CategoryPage from "./pages/CategoryPage";
+import CanvaTemplatePage from "./pages/CanvaTemplatePage";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -63,6 +64,7 @@ const App = () => {
                   <Route path="/templates" element={<TemplatesPage />} />
                   <Route path="/templates/:id" element={<TemplateFormPage />} />
                   <Route path="/category" element={<CategoryPage />} />
+                  <Route path="/canva-templates" element={<CanvaTemplatePage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -18,7 +18,8 @@ const menuItems = [
   { title: "Organizations", url: "/dshub/organizations", icon: Building2 },
   { title: "Users", url: "/dshub/users", icon: Users },
   { title: "Screens", url: "/screens", icon: Monitor },
-  { title: "Canva Template", url: "/templates", icon: FileImage },
+  // { title: "Canva old", url: "/templates", icon: FileImage },
+  { title: "Canva Template", url: "/canva-templates", icon: FileImage },
 ];
 
 export function AppSidebar() {
