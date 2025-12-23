@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -76,6 +77,8 @@ export default function TemplateFormPage() {
       canvaDesignId: design.id ?? "",
       thumbnailUrl: design.thumbnail?.url ?? "",
       title: design.title ?? dbRes?.title ?? "",
+      templateType: dbRes?.templateType ?? "DIGITAL",
+      description: dbRes?.description ?? "",
       viewUrl: design.urls?.view_url ?? "",
       editUrl: design.urls?.edit_url ?? "",
       designUrl: design.urls?.edit_url ?? "",
@@ -190,6 +193,30 @@ export default function TemplateFormPage() {
               </div>
 
               <div className="space-y-2">
+                <Label>Template Type</Label>
+                <RadioGroup
+                  value={canvaTemplate?.templateType || "DIGITAL"}
+                  onValueChange={(v) =>
+                    setCanvaTemplate((prev: any) => ({ ...prev, templateType: v }))
+                  }
+                  className="flex items-center gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="DIGITAL" id="type-digital" />
+                    <Label htmlFor="type-digital" className="font-normal cursor-pointer">
+                      DIGITAL
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="OTHERS" id="type-others" />
+                    <Label htmlFor="type-others" className="font-normal cursor-pointer">
+                      OTHERS
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="title">
                   Title <span className="text-destructive">*</span>
                 </Label>
@@ -200,6 +227,22 @@ export default function TemplateFormPage() {
                     setCanvaTemplate((prev: any) => ({ ...(prev || {}), title: e.target.value }))
                   }
                   placeholder="Enter template title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={canvaTemplate?.description ?? ""}
+                  onChange={(e) =>
+                    setCanvaTemplate((prev: any) => ({
+                      ...(prev || {}),
+                      description: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter template description"
+                  rows={3}
                 />
               </div>
 
