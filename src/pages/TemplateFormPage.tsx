@@ -39,16 +39,29 @@ export default function TemplateFormPage() {
         // Then fetch template details (single object). Set defaults for new template.
         if (canvaDesignId) {
           const canvaRes = await getCanvaDesign(canvaDesignId);
-          console.log("Fetched design from canva:", canvaRes);
-          if (canvaRes) {
-            const canvaDesign = canvaRes.design;
-            const template = await getTemplate(null, canvaDesign.id, true);
-            console.log("Fetched desing from db:", template);
-            if (mounted) {
-              const merged = mapCanvaAndDbToTemplate(canvaDesign, template);
-              console.log("Merged template:", merged);
-              setCanvaTemplate(merged);
+          console.log("Fetched design from Canva:", canvaRes);
+
+          if (!canvaRes?.design) return;
+
+          const canvaDesign = canvaRes.design;
+
+          let template: any = null;
+
+          try {
+            template = await getTemplate(null, canvaDesign.id, true);
+            console.log("Fetched design from DB:", template);
+          } catch (error: any) {
+            console.error("getTemplate failed:", error);
+
+            if (error?.response?.status === 400) {
+              console.warn("Bad request while fetching template");
             }
+          }
+
+          if (mounted) {
+            const merged = mapCanvaAndDbToTemplate(canvaDesign, template);
+            console.log("Merged template:", merged);
+            setCanvaTemplate(merged);
           }
         } else {
           console.log("No canva design id");
